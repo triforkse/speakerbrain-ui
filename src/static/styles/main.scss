@@ -3,3 +3,31 @@ $icon-font-path: '~bootstrap-sass/assets/fonts/bootstrap/';
 @import '~bootstrap-sass/assets/stylesheets/_bootstrap.scss';
 
 // can add Boostrap overrides, additional Sass/CSS below...
+
+.search {
+  font-size: 20px;
+  margin: 30px auto 30px;
+  width: 900px;
+}
+
+.search__field {
+  font-size: 20px;
+  width: 780px;
+  padding: 3px 10px;
+}
+
+.search__button {
+  font-size: 20px;
+  background-color: #338833;
+  color: white;
+  padding: 3px 10px;
+  border: 0;
+  margin-left: 20px;
+  width: 100px;
+  border-radius: 2px;
+}
+
+
+.recommendation {
+  border: solid 1px gray;
+}
