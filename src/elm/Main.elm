@@ -1,6 +1,7 @@
 module Main exposing (..)
 
 import Html exposing (..)
+import Html.Attributes exposing(style)
 import Html.Attributes as Attr
 import Html.Events as E
 import Components.API as API
@@ -22,6 +23,23 @@ main =
         }
 
 
+type alias UiRecommendation =
+    { id : String
+    , name : String
+    , total : Float
+    , sources : List API.Source
+    , showDetails : Bool
+    }
+
+apiRecommendationToUi : API.Recommendation -> UiRecommendation
+apiRecommendationToUi apiRec =
+  {
+    id = apiRec.id,
+    name = apiRec.name,
+    total = apiRec.total,
+    sources = apiRec.sources,
+    showDetails = False
+  }
 
 -- MODEL
 
@@ -30,7 +48,7 @@ type State
     = Init
     | Loading
     | Error String
-    | Loaded (List API.Recommendation)
+    | Loaded (List UiRecommendation)
 
 
 type alias Model =
@@ -49,6 +67,7 @@ init =
 type Msg
     = OnResponse API.RecommendationResponse
     | Search String
+    | ShowDetails String
     | SetQuery String
     | OnKeyDown KeyCode
 
@@ -60,12 +79,18 @@ type alias Term =
 type Query
     = Query (List Term)
 
+toggleDetailsForRecommendation : String -> UiRecommendation -> UiRecommendation
+toggleDetailsForRecommendation userId recommendation =
+  if recommendation.id == userId then
+    {recommendation | showDetails = not recommendation.showDetails}
+  else
+    recommendation
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Search queryString ->
-            { model | state = Loading } ! [ API.recommend OnResponse (Query.fromString queryString) ]
+            { model | state = Loading } ! [ API.recommend OnResponse (queryString) ]
 
         SetQuery queryString ->
             { model | queryString = queryString } ! []
@@ -85,7 +110,13 @@ update msg model =
                     { model | state = Error (toString err) } ! []
 
         OnResponse (Ok people) ->
-            { model | state = (Loaded (people |> List.sortBy .total |> List.reverse)) } ! []
+            { model | state = (Loaded (people |> List.sortBy .total |> List.reverse |> List.map apiRecommendationToUi)) } ! []
+
+        ShowDetails userId ->
+            case model.state of
+              Loaded recommendations -> {model | state = (Loaded (List.map (toggleDetailsForRecommendation userId) recommendations))} ! []
+              _ -> model ! []
+
 
 
 
@@ -111,8 +142,8 @@ view { state, queryString } =
 
         Loaded people ->
             div []
-                [ viewSearch queryString
-                , ul [] (List.map (\person -> li [] [ viewRecomendation person ]) people)
+                [ viewSearch queryString,
+                  showQueryResult people queryString
                 ]
 
 
@@ -123,25 +154,67 @@ viewSearch queryString =
         , button [ Attr.class "search__button", E.onClick <| Search queryString ] [ text "Search" ]
         ]
 
+showQueryResult : List UiRecommendation -> String -> Html Msg
+showQueryResult recommendations queryString  =
+  if List.isEmpty recommendations then
+    noResultsFound queryString
+  else
+    recommendationTable recommendations
 
-viewLink link =
-    a [ Attr.href link.href ] [ text link.text ]
+recommendationTable : List UiRecommendation -> Html Msg
+recommendationTable recommendations =
+  div [style recommendation__table] (recommendationTableHeader :: (List.map recommendationTableRow recommendations))
 
+recommendationTableHeader =
+  div [style (recommendation__table__row ++ recommendation__table__line)] [
+      span [style recommendation__table__header] [text "Speaker"],
+      span [style recommendation__table__header] [text "Rating"],
+      span [style recommendation__table__header] [text "Options"]
+  ]
 
-viewSource source =
-    div []
-        [ b [] [ text source.name ]
-        , ul [] (List.map (viewLink >> List.singleton >> li []) source.references)
-        ]
+recommendationTableRow : UiRecommendation -> Html Msg
+recommendationTableRow recommendation =
+  div [] [
+    div [style recommendation__table__row] [
+      span [] [text recommendation.name],
+      span [] [text (toString recommendation.total)],
+      span [] [recommendationRowOptions recommendation]
+    ],
+    if recommendation.showDetails then recommendationDetails recommendation.sources else div [] []
+  ]
 
+recommendationRowOptions : UiRecommendation -> Html Msg
+recommendationRowOptions recommendation =
+  div [] [
+    button [style recommendation__row__details__btn, E.onClick (ShowDetails recommendation.id)] [text "Details"],
+    button [style recommendation__row__details__btn] [text "Search"]
+  ]
 
-viewRecomendation : API.Recommendation -> Html Msg
-viewRecomendation recommendation =
-    div [ Attr.class "recommendation" ]
-        [ h1 [ Attr.class "recommendation__name" ] [ text <| recommendation.name ++ " (" ++ (toString recommendation.total) ++ ")" ]
-        , div [] (List.map viewSource recommendation.sources)
-        ]
+recommendationDetails : List API.Source -> Html Msg
+recommendationDetails sources =
+  div [style recommendation__details] (List.map recommendationSource sources)
 
+recommendationSource : API.Source -> Html Msg
+recommendationSource source =
+  if List.isEmpty source.references then
+    div [] []
+  else
+    div [] [
+      div [] [span [style recommendation__source__name] [text source.name]],
+      ul [] (List.map recommendationSourceLink source.references)
+    ]
+
+recommendationSourceLink : API.Link -> Html Msg
+recommendationSourceLink link =
+  div [] [a [Attr.href link.href] [text link.text]]
+
+noResultsFound : String -> Html Msg
+noResultsFound queryString =
+  div [style no__results__found] [
+    span [style not__found__text] [text ("NO results found for \"" ++ queryString ++ "\"!")],
+    button [style crawl__button] [text ("Crawl for speakers named \"" ++ queryString ++ "\"")],
+    button [style crawl__button] [text ("Crawl for technologies named \"" ++ queryString ++ "\"")]
+  ]
 
 viewProfile : API.Profile -> Html Msg
 viewProfile profile =
@@ -154,6 +227,85 @@ viewProfile profile =
 
 -- CSS STYLES
 
+no__results__found =
+  [
+    ("width", "100%"),
+    ("margin-top", "100px"),
+    ("display", "flex"),
+    ("flex-direction", "column"),
+    ("justify-content", "center")
+  ]
+
+not__found__text =
+  [
+    ("align-self", "center"),
+    ("font-size", "26pt")
+  ]
+
+crawl__button =
+  [
+    ("align-self", "center"),
+    ("width", "300px"),
+    ("margin-top", "55px"),
+    ("height", "75px"),
+    ("background-color", "#FAFAFA"),
+    ("border", "solid 1px #DCDCDC"),
+    ("border-radius", "10px"),
+    ("color", "#404040"),
+    ("font-size", "12pt")
+  ]
+
+recommendation__table =
+  [
+    ("display", "flex"),
+    ("flex-direction", "column"),
+    ("margin", "40px"),
+    ("width", "40%"),
+    ("padding", "10px"),
+    ("border", "solid thin #DCDCDC")
+  ]
+
+recommendation__table__header =
+    [
+      ("font-size", "10pt"),
+      ("text-transform", "uppercase"),
+      ("color", "#4F4F4F")
+    ]
+
+recommendation__table__line =
+  [
+    ("margin-left", "-10px"),
+    ("padding-left", "10px"),
+    ("margin-right", "-10px"),
+    ("padding-right", "10px"),
+    ("padding-bottom", "3px"),
+    ("margin-bottom", "4px"),
+    ("border-bottom", "solid thin #DCDCDC")
+  ]
+
+recommendation__table__row =
+  [
+    ("display", "flex"),
+    ("height", "30px"),
+    ("justify-content", "space-between")
+  ]
+
+recommendation__details =
+  [
+    ("margin-bottom", "7px")
+  ]
+
+recommendation__source__name =
+  [
+    ("text-transform", "capitalize")
+  ]
+
+recommendation__row__details__btn =
+  [
+    ("background-color", "#FAFAFA"),
+    ("border", "solid 1px #DCDCDC"),
+    ("margin-right", "7px")
+  ]
 
 styles : { img : List ( String, String ) }
 styles =

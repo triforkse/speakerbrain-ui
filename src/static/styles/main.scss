@@ -31,3 +31,16 @@ $icon-font-path: '~bootstrap-sass/assets/fonts/bootstrap/';
 .recommendation {
   border: solid 1px gray;
 }
+
+.recommendation__table {
+  margin: 40px;
+}
+
+.recommendation__table__speaker__column {
+  color: "blue";
+  width: 100px;
+}
+
+.recommendation__table__rating__column {
+  width: 20px;
+}

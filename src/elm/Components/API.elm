@@ -106,9 +106,9 @@ decodePerson =
         (at [ "sources" ] <| list decodeSource)
 
 
-recommend : (RecommendationResponse -> msg) -> List String -> Cmd msg
-recommend toMsg topics =
-    Http.get (baseURL ++ "recommend?motifs=" ++ (String.join "," topics)) (list decodePerson)
+recommend : (RecommendationResponse -> msg) -> String -> Cmd msg
+recommend toMsg query =
+    Http.get (baseURL ++ "recommend?query=" ++ query) (list decodePerson)
         |> Http.send toMsg
 
 
