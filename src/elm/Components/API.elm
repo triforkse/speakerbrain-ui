@@ -56,6 +56,13 @@ type alias RecommendationResponse =
 type alias ProfileResponse =
     Result Http.Error Profile
 
+type SearchResult
+  = Recommendations (List Recommendation)
+  | SpeakerProfile Profile
+
+type alias SearchResponse =
+  Result Http.Error SearchResult
+
 
 decodeLink : Decoder Link
 decodeLink =
@@ -105,6 +112,24 @@ decodePerson =
         (at [ "total" ] float)
         (at [ "sources" ] <| list decodeSource)
 
+
+decodeSearch : Decoder SearchResult
+decodeSearch =
+  andThen decodeSearchData (at ["result"] string)
+  -- ("result" := string) `andThen` decodeSearchData
+
+decodeSearchData : String -> Decoder SearchResult
+decodeSearchData result =
+    case result of
+      "recommendations" ->
+        map Recommendations (at ["data"] (list decodePerson))
+      "speakerprofile" ->
+        map SpeakerProfile (at ["data"] decodeProfile)
+      _ -> fail(result ++ " unkown result")
+
+search : (SearchResponse -> msg) -> String -> Cmd msg
+search toMsg query =
+  Http.get (baseURL ++ "search?query=" ++ query) decodeSearch |> Http.send toMsg
 
 recommend : (RecommendationResponse -> msg) -> String -> Cmd msg
 recommend toMsg query =

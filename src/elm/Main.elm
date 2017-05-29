@@ -141,7 +141,7 @@ view { state, queryString } =
             text <| "Error: " ++ errText
 
         Loaded people ->
-            div []
+            div [style root_div]
                 [ viewSearch queryString,
                   showQueryResult people queryString
                 ]
@@ -165,6 +165,7 @@ recommendationTable : List UiRecommendation -> Html Msg
 recommendationTable recommendations =
   div [style recommendation__table] (recommendationTableHeader :: (List.map recommendationTableRow recommendations))
 
+recommendationTableHeader : Html Msg
 recommendationTableHeader =
   div [style (recommendation__table__row ++ recommendation__table__line)] [
       span [style recommendation__table__header] [text "Speaker"],
@@ -226,7 +227,14 @@ viewProfile profile =
 
 
 -- CSS STYLES
+root_div : List (String, String)
+root_div =
+  [
+    ("display", "flex"),
+    ("flex-direction", "column")
+  ]
 
+no__results__found : List (String, String)
 no__results__found =
   [
     ("width", "100%"),
@@ -236,12 +244,14 @@ no__results__found =
     ("justify-content", "center")
   ]
 
+not__found__text : List (String, String)
 not__found__text =
   [
     ("align-self", "center"),
     ("font-size", "26pt")
   ]
 
+crawl__button : List (String, String)
 crawl__button =
   [
     ("align-self", "center"),
@@ -255,23 +265,25 @@ crawl__button =
     ("font-size", "12pt")
   ]
 
+recommendation__table : List (String, String)
 recommendation__table =
   [
     ("display", "flex"),
     ("flex-direction", "column"),
-    ("margin", "40px"),
-    ("width", "40%"),
+    ("justify-content", "space-around"),
+    ("margin", "30px"),
     ("padding", "10px"),
     ("border", "solid thin #DCDCDC")
   ]
 
+recommendation__table__header : List (String, String)
 recommendation__table__header =
     [
       ("font-size", "10pt"),
       ("text-transform", "uppercase"),
       ("color", "#4F4F4F")
     ]
-
+recommendation__table__line : List (String, String)
 recommendation__table__line =
   [
     ("margin-left", "-10px"),
@@ -283,6 +295,7 @@ recommendation__table__line =
     ("border-bottom", "solid thin #DCDCDC")
   ]
 
+recommendation__table__row : List (String, String)
 recommendation__table__row =
   [
     ("display", "flex"),
@@ -290,16 +303,19 @@ recommendation__table__row =
     ("justify-content", "space-between")
   ]
 
+recommendation__details : List (String, String)
 recommendation__details =
   [
     ("margin-bottom", "7px")
   ]
 
+recommendation__source__name : List (String, String)
 recommendation__source__name =
   [
     ("text-transform", "capitalize")
   ]
 
+recommendation__row__details__btn : List (String, String)
 recommendation__row__details__btn =
   [
     ("background-color", "#FAFAFA"),
