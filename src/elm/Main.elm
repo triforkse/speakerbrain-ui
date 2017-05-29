@@ -6,6 +6,7 @@ import Html.Attributes as Attr
 import Html.Events as E
 import Components.API as API
 import Http
+import Dict
 import Query
 import Keyboard exposing (KeyCode)
 
@@ -51,6 +52,7 @@ type State
     | Loading
     | Error String
     | LoadedRecommendations (List UiRecommendation)
+    | LoadedProfile API.Profile
 
 
 type alias Model =
@@ -116,7 +118,7 @@ update msg model =
         OnResponse (Ok result) ->
             case result of
                 API.SpeakerProfile profile ->
-                    { model | state = Error ("profile") } ! []
+                    { model | state = (LoadedProfile profile) } ! []
 
                 API.Recommendations people ->
                     { model | state = (LoadedRecommendations (people |> List.sortBy .total |> List.reverse |> List.map apiRecommendationToUi)) } ! []
@@ -151,6 +153,9 @@ view { state, queryString } =
         Error errText ->
             text <| "Error: " ++ errText
 
+        LoadedProfile profile ->
+            div [ style root_div ] [ viewSearch queryString, showProfile profile ]
+
         LoadedRecommendations people ->
             div [ style root_div ]
                 [ viewSearch queryString
@@ -164,6 +169,29 @@ viewSearch queryString =
         [ input [ Attr.class "search__field", Attr.value queryString, E.onInput SetQuery ] []
         , button [ Attr.class "search__button", E.onClick <| Search queryString ] [ text "Search" ]
         ]
+
+
+showProfile : API.Profile -> Html Msg
+showProfile profile =
+    div [] <|
+        (profile.data
+            |> Dict.toList
+            |> List.filter (Tuple.second >> List.isEmpty >> not)
+            |> List.map profileDatasource
+        )
+
+
+profileDatasource : ( String, List API.ProfileData ) -> Html Msg
+profileDatasource ( name, data ) =
+    div []
+        [ h2 [] [ text name ]
+        , div [] (List.map profileDatasourceElement data)
+        ]
+
+
+profileDatasourceElement : API.ProfileData -> Html Msg
+profileDatasourceElement data =
+    div [] [ text data.name ]
 
 
 showQueryResult : List UiRecommendation -> String -> Html Msg
