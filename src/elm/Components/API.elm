@@ -7,7 +7,7 @@ import Http
 
 baseURL : String
 baseURL =
-    "http://192.168.1.113:5000/"
+    "http://localhost:5000/"
 
 
 type alias Source =
@@ -40,13 +40,14 @@ type alias ProfileData =
 type alias Profile =
     { id : String
     , name : String
-    , data : Dict String ProfileData
+    , data : Dict String (List ProfileData)
     }
 
 
 type DetailValue
     = DetailString String
     | DetailFloat Float
+    | DetailBool Bool
 
 
 type alias RecommendationResponse =
@@ -56,12 +57,14 @@ type alias RecommendationResponse =
 type alias ProfileResponse =
     Result Http.Error Profile
 
+
 type SearchResult
-  = Recommendations (List Recommendation)
-  | SpeakerProfile Profile
+    = Recommendations (List Recommendation)
+    | SpeakerProfile Profile
+
 
 type alias SearchResponse =
-  Result Http.Error SearchResult
+    Result Http.Error SearchResult
 
 
 decodeLink : Decoder Link
@@ -73,17 +76,50 @@ decodeLink =
 
 decodeProfileData : Decoder ProfileData
 decodeProfileData =
-    map3 ProfileData
-        (at [ "id" ] string)
-        (at [ "name" ] string)
-        (at [ "data" ] <| dict decodeDetailValue)
+    dict decodeDetailValue
+        |> andThen
+            (\data ->
+                let
+                    id =
+                        Dict.get "id" data
+
+                    name =
+                        Dict.get "name" data
+
+                    others =
+                        data |> Dict.remove "id" |> Dict.remove "name"
+                in
+                    case ( id, name ) of
+                        ( Just (DetailString id), Just (DetailString name) ) ->
+                            map3 ProfileData
+                                (Json.succeed id)
+                                (Json.succeed name)
+                                (Json.succeed others)
+
+                        ( Nothing, _ ) ->
+                            Json.fail "id is missing"
+
+                        ( _, Nothing ) ->
+                            Json.fail "name is missing"
+
+                        error ->
+                            Json.fail <| "id or name is illegal: " ++ (toString error)
+            )
+
+
+
+-- map3 ProfileData
+--     (at [ "id" ] string)
+--     (at [ "name" ] string)
+--     (at [ "data" ] <| dict decodeDetailValue)
 
 
 decodeDetailValue : Decoder DetailValue
 decodeDetailValue =
     oneOf
-        [ string |> andThen (DetailString >> succeed)
-        , float |> andThen (DetailFloat >> succeed)
+        [ Json.map DetailString string
+        , Json.map DetailFloat float
+        , Json.map DetailBool bool
         ]
 
 
@@ -92,7 +128,7 @@ decodeProfile =
     map3 Profile
         (at [ "id" ] string)
         (at [ "name" ] string)
-        (at [ "data" ] <| dict decodeProfileData)
+        (at [ "data" ] <| dict (list decodeProfileData))
 
 
 decodeSource : Decoder Source
@@ -115,21 +151,26 @@ decodePerson =
 
 decodeSearch : Decoder SearchResult
 decodeSearch =
-  andThen decodeSearchData (at ["result"] string)
-  -- ("result" := string) `andThen` decodeSearchData
+    at [ "result" ] string |> andThen decodeSearchData
+
 
 decodeSearchData : String -> Decoder SearchResult
 decodeSearchData result =
     case result of
-      "recommendations" ->
-        map Recommendations (at ["data"] (list decodePerson))
-      "speakerprofile" ->
-        map SpeakerProfile (at ["data"] decodeProfile)
-      _ -> fail(result ++ " unkown result")
+        "recommendations" ->
+            map Recommendations (field "data" (list decodePerson))
+
+        "speakerprofile" ->
+            map SpeakerProfile (field "data" decodeProfile)
+
+        _ ->
+            fail (result ++ " unkown result")
+
 
 search : (SearchResponse -> msg) -> String -> Cmd msg
 search toMsg query =
-  Http.get (baseURL ++ "search?query=" ++ query) decodeSearch |> Http.send toMsg
+    Http.get (baseURL ++ "search?query=" ++ query) decodeSearch |> Http.send toMsg
+
 
 recommend : (RecommendationResponse -> msg) -> String -> Cmd msg
 recommend toMsg query =
