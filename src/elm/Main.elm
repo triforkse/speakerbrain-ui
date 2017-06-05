@@ -7,7 +7,6 @@ import Html.Events as E
 import Components.API as API
 import Http
 import Dict
-import Query
 import Keyboard exposing (KeyCode)
 
 
@@ -173,7 +172,7 @@ viewSearch queryString =
 
 showProfile : API.Profile -> Html Msg
 showProfile profile =
-    div [] <|
+    div [ style recommendation__table ] <|
         (profile.data
             |> Dict.toList
             |> List.filter (Tuple.second >> List.isEmpty >> not)
@@ -183,15 +182,15 @@ showProfile profile =
 
 profileDatasource : ( String, List API.ProfileData ) -> Html Msg
 profileDatasource ( name, data ) =
-    div []
-        [ h2 [] [ text name ]
+    div [ style recommendation__table__line ]
+        [ div [ style (recommendation__table__header ++ recommendation__table__line) ] [ text name ]
         , div [] (List.map profileDatasourceElement data)
         ]
 
 
 profileDatasourceElement : API.ProfileData -> Html Msg
 profileDatasourceElement data =
-    div [] [ text data.name ]
+    div [] [ a [ Attr.href data.href ] [ text data.name ] ]
 
 
 showQueryResult : List UiRecommendation -> String -> Html Msg

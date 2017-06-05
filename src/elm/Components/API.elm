@@ -33,8 +33,51 @@ type alias Recommendation =
 type alias ProfileData =
     { id : String
     , name : String
+    , href : String
     , data : Dict String DetailValue
     }
+
+
+
+-- type alias DataSourceEntry a =
+--     { a
+--         | id : String
+--         , name : String
+--     }
+--
+--
+-- type alias UnknownDataSourceEntry =
+--     DataSourceEntry
+--         { data : Dict String DetailValue
+--         }
+--
+--
+-- type alias YouTubeVideo =
+--     DataSourceEntry
+--         { youtubeId : String
+--         , views : String
+--         , likes : String
+--         , dislikes : String
+--         }
+--
+--
+-- type alias LanyrdEvent =
+--     DataSourceEntry
+--         { location : String
+--         , date : String
+--         }
+--
+--
+-- type alias GitHubRepository =
+--     DataSourceEntry
+--         { language : String
+--         , stargazers : String
+--         , subscribers : String
+--         , forks : String
+--         , watchers : String
+--         , fromOrganisation : String
+--         }
+--
 
 
 type alias Profile =
@@ -86,21 +129,32 @@ decodeProfileData =
                     name =
                         Dict.get "name" data
 
+                    href =
+                        Dict.get "origin_url" data
+
                     others =
                         data |> Dict.remove "id" |> Dict.remove "name"
                 in
-                    case ( id, name ) of
-                        ( Just (DetailString id), Just (DetailString name) ) ->
-                            map3 ProfileData
+                    case ( id, name, href ) of
+                        ( Just (DetailString id), Just (DetailString name), Just (DetailString href) ) ->
+                            map4 ProfileData
                                 (Json.succeed id)
                                 (Json.succeed name)
+                                (Json.succeed href)
                                 (Json.succeed others)
 
-                        ( Nothing, _ ) ->
+                        ( Nothing, _, _ ) ->
                             Json.fail "id is missing"
 
-                        ( _, Nothing ) ->
+                        ( _, Nothing, _ ) ->
                             Json.fail "name is missing"
+
+                        ( Just (DetailString id), Just (DetailString name), Nothing ) ->
+                            map4 ProfileData
+                                (Json.succeed id)
+                                (Json.succeed name)
+                                (Json.succeed "")
+                                (Json.succeed others)
 
                         error ->
                             Json.fail <| "id or name is illegal: " ++ (toString error)
