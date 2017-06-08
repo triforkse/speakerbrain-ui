@@ -50,7 +50,7 @@ type State
     = Init
     | Loading
     | Error String
-    | LoadedRecommendations (List UiRecommendation)
+    | LoadedRecommendations (List UiRecommendation) (Maybe UiRecommendation)
     | LoadedProfile API.Profile
 
 
@@ -70,7 +70,7 @@ init =
 type Msg
     = OnResponse API.SearchResponse
     | Search String
-    | ShowDetails String
+    | ShowDetails UiRecommendation
     | SetQuery String
     | OnKeyDown KeyCode
 
@@ -120,12 +120,12 @@ update msg model =
                     { model | state = (LoadedProfile profile) } ! []
 
                 API.Recommendations people ->
-                    { model | state = (LoadedRecommendations (people |> List.sortBy .total |> List.reverse |> List.map apiRecommendationToUi)) } ! []
+                    { model | state = (LoadedRecommendations (people |> List.sortBy .total |> List.reverse |> List.map apiRecommendationToUi) Nothing) } ! []
 
-        ShowDetails userId ->
+        ShowDetails recommendation ->
             case model.state of
-                LoadedRecommendations recommendations ->
-                    { model | state = (LoadedRecommendations (List.map (toggleDetailsForRecommendation userId) recommendations)) } ! []
+                LoadedRecommendations recommendations _ ->
+                    { model | state = (LoadedRecommendations recommendations (Just recommendation)) } ! []
 
                 _ ->
                     model ! []
@@ -155,10 +155,10 @@ view { state, queryString } =
         LoadedProfile profile ->
             div [ style root_div ] [ viewSearch queryString, showProfile profile ]
 
-        LoadedRecommendations people ->
+        LoadedRecommendations people selectedUserId ->
             div [ style root_div ]
                 [ viewSearch queryString
-                , showQueryResult people queryString
+                , showQueryResult people queryString selectedUserId
                 ]
 
 
@@ -193,12 +193,15 @@ profileDatasourceElement data =
     div [] [ a [ Attr.href data.href ] [ text data.name ] ]
 
 
-showQueryResult : List UiRecommendation -> String -> Html Msg
-showQueryResult recommendations queryString =
+showQueryResult : List UiRecommendation -> String -> Maybe UiRecommendation -> Html Msg
+showQueryResult recommendations queryString selectedUserId =
     if List.isEmpty recommendations then
         noResultsFound queryString
     else
-        recommendationTable recommendations
+        div [ style recommendation__frame ]
+            [ recommendationTable recommendations
+            , userRecommendationDetails selectedUserId
+            ]
 
 
 recommendationTable : List UiRecommendation -> Html Msg
@@ -206,34 +209,36 @@ recommendationTable recommendations =
     div [ style recommendation__table ] (recommendationTableHeader :: (List.map recommendationTableRow recommendations))
 
 
+userRecommendationDetails : Maybe UiRecommendation -> Html Msg
+userRecommendationDetails selectedUserId =
+    case selectedUserId of
+        Nothing ->
+            div [] []
+
+        Just recommendation ->
+            div [ style recommendation__table ] (List.map recommendationSource recommendation.sources)
+
+
 recommendationTableHeader : Html Msg
 recommendationTableHeader =
     div [ style (recommendation__table__row ++ recommendation__table__line) ]
-        [ span [ style recommendation__table__header ] [ text "Speaker" ]
-        , span [ style recommendation__table__header ] [ text "Rating" ]
-        , span [ style recommendation__table__header ] [ text "Options" ]
+        [ span [ style (recommendation__table__header ++ recommendation__rating__column) ] [ text "Rating" ]
+        , span [ style recommendation__table__header ] [ text "Speaker" ]
         ]
 
 
 recommendationTableRow : UiRecommendation -> Html Msg
 recommendationTableRow recommendation =
-    div []
-        [ div [ style recommendation__table__row ]
-            [ span [] [ text recommendation.name ]
-            , span [] [ text (toString recommendation.total) ]
-            , span [] [ recommendationRowOptions recommendation ]
-            ]
-        , if recommendation.showDetails then
-            recommendationDetails recommendation.sources
-          else
-            div [] []
+    div [ style recommendation__table__row ]
+        [ span [ style recommendation__rating__column ] [ text (toString recommendation.total) ]
+        , span [ style link__button ] [ a [ E.onClick (ShowDetails recommendation) ] [ text recommendation.name ] ]
         ]
 
 
 recommendationRowOptions : UiRecommendation -> Html Msg
 recommendationRowOptions recommendation =
     div []
-        [ button [ style recommendation__row__details__btn, E.onClick (ShowDetails recommendation.id) ] [ text "Details" ]
+        [ button [ style recommendation__row__details__btn, E.onClick (ShowDetails recommendation) ] [ text "Details" ]
         , button [ style recommendation__row__details__btn ] [ text "Search" ]
         ]
 
@@ -249,7 +254,7 @@ recommendationSource source =
         div [] []
     else
         div []
-            [ div [] [ span [ style recommendation__source__name ] [ text source.name ] ]
+            [ div [ style (recommendation__table__header ++ recommendation__table__line) ] [ text source.name ]
             , ul [] (List.map recommendationSourceLink source.references)
             ]
 
@@ -287,6 +292,11 @@ root_div =
     ]
 
 
+link__button : List ( String, String )
+link__button =
+    [ ( "cursor", "pointer" ) ]
+
+
 no__results__found : List ( String, String )
 no__results__found =
     [ ( "width", "100%" )
@@ -318,15 +328,28 @@ crawl__button =
     ]
 
 
-recommendation__table : List ( String, String )
-recommendation__table =
+recommendation__frame : List ( String, String )
+recommendation__frame =
+    [ ( "display", "flex" )
+    , ( "align-items", "flex-start" )
+    , ( "height", "80%" )
+    ]
+
+
+generic__table : List ( String, String )
+generic__table =
     [ ( "display", "flex" )
     , ( "flex-direction", "column" )
-    , ( "justify-content", "space-around" )
     , ( "margin", "30px" )
     , ( "padding", "10px" )
+    , ( "width", "50vw" )
     , ( "border", "solid thin #DCDCDC" )
     ]
+
+
+recommendation__table : List ( String, String )
+recommendation__table =
+    generic__table ++ [ ( "width", "50vw" ) ]
 
 
 recommendation__table__header : List ( String, String )
@@ -352,9 +375,19 @@ recommendation__table__line =
 recommendation__table__row : List ( String, String )
 recommendation__table__row =
     [ ( "display", "flex" )
+    , ( "flex-direction", "row" )
     , ( "height", "30px" )
-    , ( "justify-content", "space-between" )
     ]
+
+
+recommendation__rating__column : List ( String, String )
+recommendation__rating__column =
+    [ ( "width", "90px" ) ]
+
+
+recommendation__options__column : List ( String, String )
+recommendation__options__column =
+    [ ( "right", "0px" ), ( "float", "right" ) ]
 
 
 recommendation__details : List ( String, String )
