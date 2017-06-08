@@ -27,12 +27,17 @@ main =
 -- MODEL
 
 
+type ProfileTabView
+    = ProfileTab
+    | LibraryTab
+
+
 type State
     = Init
     | Loading
     | Error String
     | LoadedRecommendations (List API.Recommendation) (Maybe API.Recommendation)
-    | LoadedProfile API.Profile
+    | LoadedProfile API.Profile ProfileTabView
 
 
 type alias Model =
@@ -52,6 +57,7 @@ type Msg
     = OnResponse API.SearchResponse
     | Search String
     | ShowDetails API.Recommendation
+    | ChangeProfileTab API.Profile ProfileTabView
     | SetQuery String
     | OnKeyDown KeyCode
 
@@ -90,10 +96,13 @@ update msg model =
         OnResponse (Ok result) ->
             case result of
                 API.SpeakerProfile profile ->
-                    { model | state = (LoadedProfile profile) } ! []
+                    { model | state = (LoadedProfile profile ProfileTab) } ! []
 
                 API.Recommendations people ->
                     { model | state = (LoadedRecommendations (people |> List.sortBy .total |> List.reverse) Nothing) } ! []
+
+        ChangeProfileTab profile newTabView ->
+            { model | state = (LoadedProfile profile newTabView) } ! []
 
         ShowDetails recommendation ->
             case model.state of
@@ -125,8 +134,8 @@ view { state, queryString } =
         Error errText ->
             text <| "Error: " ++ errText
 
-        LoadedProfile profile ->
-            div [ style root_div ] [ viewSearch queryString, showProfile profile ]
+        LoadedProfile profile currentTab ->
+            div [ style root_div ] [ viewSearch queryString, profileTabBar profile currentTab, (showProfile profile currentTab) ]
 
         LoadedRecommendations people selectedUserId ->
             div [ style root_div ]
@@ -151,8 +160,37 @@ tabBar =
         ]
 
 
-showProfile : API.Profile -> Html Msg
-showProfile profile =
+profileTabBar : API.Profile -> ProfileTabView -> Html Msg
+profileTabBar profile currentTab =
+    div [ style tab__bar ]
+        [ profileTabItem profile currentTab ProfileTab "Profile"
+        , profileTabItem profile currentTab LibraryTab "Library"
+        ]
+
+
+profileTabItem : API.Profile -> ProfileTabView -> ProfileTabView -> String -> Html Msg
+profileTabItem profile currentTab thisTab name =
+    div [ style (tab__item (currentTab == thisTab)) ]
+        [ span [ E.onClick (ChangeProfileTab profile thisTab) ] [ text name ] ]
+
+
+showProfile : API.Profile -> ProfileTabView -> Html Msg
+showProfile profile currentTab =
+    case currentTab of
+        ProfileTab ->
+            showProfileInfo
+
+        LibraryTab ->
+            showProfileLibrary profile
+
+
+showProfileInfo : Html Msg
+showProfileInfo =
+    div [] []
+
+
+showProfileLibrary : API.Profile -> Html Msg
+showProfileLibrary profile =
     div [ style generic__table ] <|
         (profile.data
             |> Dict.toList
