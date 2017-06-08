@@ -23,25 +23,6 @@ main =
         }
 
 
-type alias UiRecommendation =
-    { id : String
-    , name : String
-    , total : Float
-    , sources : List API.Source
-    , showDetails : Bool
-    }
-
-
-apiRecommendationToUi : API.Recommendation -> UiRecommendation
-apiRecommendationToUi apiRec =
-    { id = apiRec.id
-    , name = apiRec.name
-    , total = apiRec.total
-    , sources = apiRec.sources
-    , showDetails = False
-    }
-
-
 
 -- MODEL
 
@@ -50,7 +31,7 @@ type State
     = Init
     | Loading
     | Error String
-    | LoadedRecommendations (List UiRecommendation) (Maybe UiRecommendation)
+    | LoadedRecommendations (List API.Recommendation) (Maybe API.Recommendation)
     | LoadedProfile API.Profile
 
 
@@ -70,7 +51,7 @@ init =
 type Msg
     = OnResponse API.SearchResponse
     | Search String
-    | ShowDetails UiRecommendation
+    | ShowDetails API.Recommendation
     | SetQuery String
     | OnKeyDown KeyCode
 
@@ -81,14 +62,6 @@ type alias Term =
 
 type Query
     = Query (List Term)
-
-
-toggleDetailsForRecommendation : String -> UiRecommendation -> UiRecommendation
-toggleDetailsForRecommendation userId recommendation =
-    if recommendation.id == userId then
-        { recommendation | showDetails = not recommendation.showDetails }
-    else
-        recommendation
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -120,7 +93,7 @@ update msg model =
                     { model | state = (LoadedProfile profile) } ! []
 
                 API.Recommendations people ->
-                    { model | state = (LoadedRecommendations (people |> List.sortBy .total |> List.reverse |> List.map apiRecommendationToUi) Nothing) } ! []
+                    { model | state = (LoadedRecommendations (people |> List.sortBy .total |> List.reverse) Nothing) } ! []
 
         ShowDetails recommendation ->
             case model.state of
@@ -193,7 +166,7 @@ profileDatasourceElement data =
     div [] [ a [ Attr.href data.href ] [ text data.name ] ]
 
 
-showQueryResult : List UiRecommendation -> String -> Maybe UiRecommendation -> Html Msg
+showQueryResult : List API.Recommendation -> String -> Maybe API.Recommendation -> Html Msg
 showQueryResult recommendations queryString selectedUserId =
     if List.isEmpty recommendations then
         noResultsFound queryString
@@ -204,12 +177,12 @@ showQueryResult recommendations queryString selectedUserId =
             ]
 
 
-recommendationTable : List UiRecommendation -> Html Msg
+recommendationTable : List API.Recommendation -> Html Msg
 recommendationTable recommendations =
     div [ style recommendation__table ] (recommendationTableHeader :: (List.map recommendationTableRow recommendations))
 
 
-userRecommendationDetails : Maybe UiRecommendation -> Html Msg
+userRecommendationDetails : Maybe API.Recommendation -> Html Msg
 userRecommendationDetails selectedUserId =
     case selectedUserId of
         Nothing ->
@@ -227,7 +200,7 @@ recommendationTableHeader =
         ]
 
 
-recommendationTableRow : UiRecommendation -> Html Msg
+recommendationTableRow : API.Recommendation -> Html Msg
 recommendationTableRow recommendation =
     div [ style recommendation__table__row ]
         [ span [ style recommendation__rating__column ] [ text (toString recommendation.total) ]
@@ -235,7 +208,7 @@ recommendationTableRow recommendation =
         ]
 
 
-recommendationRowOptions : UiRecommendation -> Html Msg
+recommendationRowOptions : API.Recommendation -> Html Msg
 recommendationRowOptions recommendation =
     div []
         [ button [ style recommendation__row__details__btn, E.onClick (ShowDetails recommendation) ] [ text "Details" ]
