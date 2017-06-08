@@ -131,21 +131,29 @@ view { state, queryString } =
         LoadedRecommendations people selectedUserId ->
             div [ style root_div ]
                 [ viewSearch queryString
+                , tabBar
                 , showQueryResult people queryString selectedUserId
                 ]
 
 
 viewSearch : String -> Html Msg
 viewSearch queryString =
-    div [ Attr.class "search" ]
+    div [ style search__section ]
         [ input [ Attr.class "search__field", Attr.value queryString, E.onInput SetQuery ] []
         , button [ Attr.class "search__button", E.onClick <| Search queryString ] [ text "Search" ]
         ]
 
 
+tabBar : Html Msg
+tabBar =
+    div [ style tab__bar ]
+        [ div [ style (tab__item True) ] [ text "Speakers" ]
+        ]
+
+
 showProfile : API.Profile -> Html Msg
 showProfile profile =
-    div [ style recommendation__table ] <|
+    div [ style generic__table ] <|
         (profile.data
             |> Dict.toList
             |> List.filter (Tuple.second >> List.isEmpty >> not)
@@ -258,6 +266,43 @@ viewProfile profile =
 -- CSS STYLES
 
 
+search__section : List ( String, String )
+search__section =
+    [ ( "background-color", "#FAFAFA" )
+    , ( "font-size", "20px" )
+    , ( "display", "flex" )
+    , ( "justify-content", "center" )
+    , ( "align-items", "center" )
+    , ( "height", "10vh" )
+    , ( "border-bottom", "solid thin #DCDCDC" )
+    ]
+
+
+tab__bar : List ( String, String )
+tab__bar =
+    [ ( "height", "5vh" )
+    , ( "padding-left", "30px" )
+    , ( "padding-right", "30px" )
+    , ( "display", "flex" )
+    , ( "border-bottom", "solid thin #DCDCDC" )
+    ]
+
+
+tab__item : Bool -> List ( String, String )
+tab__item active =
+    [ ( "height", "5vh" )
+    , ( "display", "flex" )
+    , ( "justify-content", "center" )
+    , ( "align-items", "center" )
+    , ( "margin-right", "20px" )
+    , ( "cursor", "pointer" )
+    ]
+        ++ if active then
+            [ ( "font-weight", "bold" ) ]
+           else
+            [ ( "opacity", "0.8" ) ]
+
+
 root_div : List ( String, String )
 root_div =
     [ ( "display", "flex" )
@@ -315,7 +360,6 @@ generic__table =
     , ( "flex-direction", "column" )
     , ( "margin", "30px" )
     , ( "padding", "10px" )
-    , ( "width", "50vw" )
     , ( "border", "solid thin #DCDCDC" )
     ]
 
