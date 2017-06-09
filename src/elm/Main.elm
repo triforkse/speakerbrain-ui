@@ -148,7 +148,7 @@ view { state, queryString } =
 viewSearch : String -> Html Msg
 viewSearch queryString =
     div [ style search__section ]
-        [ input [ Attr.class "search__field", Attr.value queryString, E.onInput SetQuery ] []
+        [ input [ Attr.class "search__field", Attr.value queryString, E.onInput SetQuery, Attr.placeholder "Search for technology or speaker" ] []
         , button [ Attr.class "search__button", E.onClick <| Search queryString ] [ text "Search" ]
         ]
 
