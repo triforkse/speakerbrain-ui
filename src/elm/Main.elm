@@ -126,10 +126,7 @@ view { state, queryString } =
             viewSearch queryString
 
         Loading ->
-            div []
-                [ viewSearch queryString
-                , text "Searching..."
-                ]
+            div [] [ viewSearch queryString, loadingView queryString ]
 
         Error errText ->
             text <| "Error: " ++ errText
@@ -143,6 +140,14 @@ view { state, queryString } =
                 , tabBar
                 , showQueryResult people queryString selectedUserId
                 ]
+
+
+loadingView : String -> Html Msg
+loadingView queryString =
+    div [ style loading__view ]
+        [ img [ Attr.src "static/img/loading.svg" ] []
+        , span [ style loading__label ] [ text ("Looking for '" ++ queryString ++ "'...") ]
+        ]
 
 
 viewSearch : String -> Html Msg
@@ -302,6 +307,23 @@ viewProfile profile =
 
 
 -- CSS STYLES
+
+
+loading__view : List ( String, String )
+loading__view =
+    [ ( "display", "flex" )
+    , ( "flex-direction", "column" )
+    , ( "justify-content", "center" )
+    , ( "align-items", "center" )
+    , ( "height", "90vh" )
+    ]
+
+
+loading__label : List ( String, String )
+loading__label =
+    [ ( "font-size", "32pt" )
+    , ( "font-weight", "lighter" )
+    ]
 
 
 search__section : List ( String, String )

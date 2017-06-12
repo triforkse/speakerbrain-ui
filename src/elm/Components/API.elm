@@ -133,7 +133,7 @@ decodeProfileData =
                         Dict.get "origin_url" data
 
                     others =
-                        data |> Dict.remove "id" |> Dict.remove "name"
+                        data |> Dict.remove "id" |> Dict.remove "name" |> Dict.remove "origin_url"
                 in
                     case ( id, name, href ) of
                         ( Just (DetailString id), Just (DetailString name), Just (DetailString href) ) ->
