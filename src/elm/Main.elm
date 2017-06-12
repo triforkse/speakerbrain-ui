@@ -426,7 +426,11 @@ generic__table =
 
 recommendation__table : List ( String, String )
 recommendation__table =
-    generic__table ++ [ ( "width", "50vw" ) ]
+    generic__table
+        ++ [ ( "width", "50vw" )
+           , ( "height", "70vh" )
+           , ( "overflow-y", "scroll" )
+           ]
 
 
 recommendation__table__header : List ( String, String )
@@ -452,7 +456,7 @@ recommendation__table__line =
 recommendation__table__row : List ( String, String )
 recommendation__table__row =
     [ ( "display", "flex" )
-    , ( "flex-direction", "row" )
+    , ( "min-height", "30px" )
     , ( "height", "30px" )
     ]
 
