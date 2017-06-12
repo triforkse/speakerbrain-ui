@@ -428,7 +428,7 @@ recommendation__table : List ( String, String )
 recommendation__table =
     generic__table
         ++ [ ( "width", "50vw" )
-           , ( "height", "70vh" )
+           , ( "height", "80vh" )
            , ( "overflow-y", "scroll" )
            ]
 
