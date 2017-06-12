@@ -1,10 +1,12 @@
 module Main exposing (..)
 
+import App exposing (Msg, State, ProfileTabView)
 import Html exposing (..)
 import Html.Attributes exposing (style)
 import Html.Attributes as Attr
 import Html.Events as E
 import Components.API as API
+import Components.Profile.Info exposing (profileInfoWidget)
 import Http
 import Dict
 import Keyboard exposing (KeyCode)
@@ -27,39 +29,17 @@ main =
 -- MODEL
 
 
-type ProfileTabView
-    = ProfileTab
-    | LibraryTab
-
-
-type State
-    = Init
-    | Loading
-    | Error String
-    | LoadedRecommendations (List API.Recommendation) (Maybe API.Recommendation)
-    | LoadedProfile API.Profile ProfileTabView
-
-
 type alias Model =
     { state : State, queryString : String }
 
 
 init : ( Model, Cmd Msg )
 init =
-    { state = Init, queryString = "" } ! []
+    { state = App.Init, queryString = "" } ! []
 
 
 
 -- UPDATE
-
-
-type Msg
-    = OnResponse API.SearchResponse
-    | Search String
-    | ShowDetails API.Recommendation
-    | ChangeProfileTab API.Profile ProfileTabView
-    | SetQuery String
-    | OnKeyDown KeyCode
 
 
 type alias Term =
@@ -73,41 +53,41 @@ type Query
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Search queryString ->
-            { model | state = Loading } ! [ API.search OnResponse (queryString) ]
+        App.Search queryString ->
+            { model | state = App.Loading } ! [ API.search App.OnResponse (queryString) ]
 
-        SetQuery queryString ->
+        App.SetQuery queryString ->
             { model | queryString = queryString } ! []
 
-        OnKeyDown key ->
+        App.OnKeyDown key ->
             if key == 13 then
-                update (Search model.queryString) model
+                update (App.Search model.queryString) model
             else
                 model ! []
 
-        OnResponse (Err err) ->
+        App.OnResponse (Err err) ->
             case err of
                 Http.BadPayload errorString e ->
-                    { model | state = Error errorString } ! []
+                    { model | state = App.Error errorString } ! []
 
                 _ ->
-                    { model | state = Error (toString err) } ! []
+                    { model | state = App.Error (toString err) } ! []
 
-        OnResponse (Ok result) ->
+        App.OnResponse (Ok result) ->
             case result of
                 API.SpeakerProfile profile ->
-                    { model | state = (LoadedProfile profile ProfileTab) } ! []
+                    { model | state = (App.LoadedProfile profile App.ProfileTab) } ! []
 
                 API.Recommendations people ->
-                    { model | state = (LoadedRecommendations (people |> List.sortBy .total |> List.reverse) Nothing) } ! []
+                    { model | state = (App.LoadedRecommendations (people |> List.sortBy .total |> List.reverse) Nothing) } ! []
 
-        ChangeProfileTab profile newTabView ->
-            { model | state = (LoadedProfile profile newTabView) } ! []
+        App.ChangeProfileTab profile newTabView ->
+            { model | state = (App.LoadedProfile profile newTabView) } ! []
 
-        ShowDetails recommendation ->
+        App.ShowDetails recommendation ->
             case model.state of
-                LoadedRecommendations recommendations _ ->
-                    { model | state = (LoadedRecommendations recommendations (Just recommendation)) } ! []
+                App.LoadedRecommendations recommendations _ ->
+                    { model | state = (App.LoadedRecommendations recommendations (Just recommendation)) } ! []
 
                 _ ->
                     model ! []
@@ -122,19 +102,19 @@ update msg model =
 view : Model -> Html Msg
 view { state, queryString } =
     case state of
-        Init ->
+        App.Init ->
             viewSearch queryString
 
-        Loading ->
+        App.Loading ->
             div [] [ viewSearch queryString, loadingView queryString ]
 
-        Error errText ->
+        App.Error errText ->
             text <| "Error: " ++ errText
 
-        LoadedProfile profile currentTab ->
+        App.LoadedProfile profile currentTab ->
             div [ style root_div ] [ viewSearch queryString, profileTabBar profile currentTab, (showProfile profile currentTab) ]
 
-        LoadedRecommendations people selectedUserId ->
+        App.LoadedRecommendations people selectedUserId ->
             div [ style root_div ]
                 [ viewSearch queryString
                 , tabBar
@@ -153,8 +133,8 @@ loadingView queryString =
 viewSearch : String -> Html Msg
 viewSearch queryString =
     div [ style search__section ]
-        [ input [ Attr.class "search__field", Attr.value queryString, E.onInput SetQuery, Attr.placeholder "Search for technology or speaker" ] []
-        , button [ Attr.class "search__button", E.onClick <| Search queryString ] [ text "Search" ]
+        [ input [ Attr.class "search__field", Attr.value queryString, E.onInput App.SetQuery, Attr.placeholder "Search for technology or speaker" ] []
+        , button [ Attr.class "search__button", E.onClick <| App.Search queryString ] [ text "Search" ]
         ]
 
 
@@ -168,24 +148,24 @@ tabBar =
 profileTabBar : API.Profile -> ProfileTabView -> Html Msg
 profileTabBar profile currentTab =
     div [ style tab__bar ]
-        [ profileTabItem profile currentTab ProfileTab "Profile"
-        , profileTabItem profile currentTab LibraryTab "Library"
+        [ profileTabItem profile currentTab App.ProfileTab "Profile"
+        , profileTabItem profile currentTab App.LibraryTab "Library"
         ]
 
 
 profileTabItem : API.Profile -> ProfileTabView -> ProfileTabView -> String -> Html Msg
 profileTabItem profile currentTab thisTab name =
     div [ style (tab__item (currentTab == thisTab)) ]
-        [ span [ E.onClick (ChangeProfileTab profile thisTab) ] [ text name ] ]
+        [ span [ E.onClick (App.ChangeProfileTab profile thisTab) ] [ text name ] ]
 
 
 showProfile : API.Profile -> ProfileTabView -> Html Msg
 showProfile profile currentTab =
     case currentTab of
-        ProfileTab ->
-            showProfileInfo
+        App.ProfileTab ->
+            profileInfoWidget
 
-        LibraryTab ->
+        App.LibraryTab ->
             showProfileLibrary profile
 
 
@@ -255,14 +235,14 @@ recommendationTableRow : API.Recommendation -> Html Msg
 recommendationTableRow recommendation =
     div [ style recommendation__table__row ]
         [ span [ style recommendation__rating__column ] [ text (toString recommendation.total) ]
-        , span [ style link__button ] [ a [ E.onClick (ShowDetails recommendation) ] [ text recommendation.name ] ]
+        , span [ style link__button ] [ a [ E.onClick (App.ShowDetails recommendation) ] [ text recommendation.name ] ]
         ]
 
 
 recommendationRowOptions : API.Recommendation -> Html Msg
 recommendationRowOptions recommendation =
     div []
-        [ button [ style recommendation__row__details__btn, E.onClick (ShowDetails recommendation) ] [ text "Details" ]
+        [ button [ style recommendation__row__details__btn, E.onClick (App.ShowDetails recommendation) ] [ text "Details" ]
         , button [ style recommendation__row__details__btn ] [ text "Search" ]
         ]
 
@@ -506,4 +486,4 @@ styles =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Keyboard.presses OnKeyDown
+    Keyboard.presses App.OnKeyDown

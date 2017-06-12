@@ -83,6 +83,7 @@ type alias ProfileData =
 type alias Profile =
     { id : String
     , name : String
+    , credentials : Dict String (List String)
     , data : Dict String (List ProfileData)
     }
 
@@ -179,9 +180,10 @@ decodeDetailValue =
 
 decodeProfile : Decoder Profile
 decodeProfile =
-    map3 Profile
+    map4 Profile
         (at [ "id" ] string)
         (at [ "name" ] string)
+        (at [ "credentials" ] <| dict (list string))
         (at [ "data" ] <| dict (list decodeProfileData))
 
 
