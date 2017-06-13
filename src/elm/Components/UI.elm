@@ -163,7 +163,7 @@ table__line =
 
 table__row : CssStyle
 table__row =
-    [ ( "display", "flex" )
+    [ ( "display", "block" )
     , ( "height", "30px" )
     , ( "max-height", "30px" )
     , ( "width", "100%" )
@@ -175,4 +175,4 @@ table__row =
 
 table__row__column : CssStyle
 table__row__column =
-    [ ( "color", "#585858" ) ]
+    [ ( "color", "#585858" ), ( "display", "inline-block" ) ]

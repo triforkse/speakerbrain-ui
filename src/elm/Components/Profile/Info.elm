@@ -94,6 +94,8 @@ delete__btn =
     [ ( "background-color", "#ff7c81" )
     , ( "border-color", "#ff7c81" )
     , ( "color", "white" )
+    , ( "float", "right" )
+    , ( "margin-right", "10px" )
     ]
 
 
