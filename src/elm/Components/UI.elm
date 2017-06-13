@@ -1,8 +1,9 @@
-module Components.UI exposing (CssStyle, TableColumn, TableRow, TableCell(Text, Htm), sectionHeader, tbl, btn)
+module Components.UI exposing (CssStyle, TableColumn, TableRow, TableCell(Text, Htm), sectionHeader, tbl, btn, dpb, nmd, txt)
 
 import App exposing (Msg)
 import Html exposing (..)
 import Html.Attributes exposing (style)
+import Html.Attributes as Attr
 
 
 type alias CssStyle =
@@ -25,6 +26,21 @@ type alias TableRow =
 sectionHeader : String -> Html Msg
 sectionHeader name =
     div [ style section__header ] [ span [] [ text name ] ]
+
+
+txt : Html Msg
+txt =
+    input [ style std__input ] []
+
+
+dpb : Html Msg
+dpb =
+    select [ style select__css ] [ option [] [ text "YouTube" ], option [] [ text "GitHub" ], option [] [ text "Twitter" ] ]
+
+
+nmd : String -> Html Msg -> Html Msg
+nmd name html =
+    div [ style nmd__css ] [ span [ style nmd__label ] [ text name ], html ]
 
 
 btn : String -> CssStyle -> Html Msg
@@ -68,6 +84,28 @@ columnHeader ( label, styling ) =
     div [ style (header__column ++ styling) ] [ text label ]
 
 
+std__input : CssStyle
+std__input =
+    [ ( "height", "20px" )
+    , ( "border", "solid thin grey" )
+    , ( "border-radius", "2px" )
+    ]
+
+
+nmd__css : CssStyle
+nmd__css =
+    [ ( "display", "flex" )
+    , ( "flex-direction", "column" )
+    , ( "margin-right", "20px" )
+    ]
+
+
+nmd__label : CssStyle
+nmd__label =
+    [ ( "font-size", "8pt" )
+    ]
+
+
 tableLine : Html Msg
 tableLine =
     div [ style table__line ] []
@@ -75,12 +113,15 @@ tableLine =
 
 button__css : CssStyle
 button__css =
-    [ ( "height", "20px" )
-    , ( "border", "solid thin grey" )
-    , ( "border-radius", "3px" )
-    , ( "background", "white" )
-    , ( "font-size", "8pt" )
-    ]
+    std__input
+        ++ [ ( "background", "white" )
+           , ( "font-size", "8pt" )
+           ]
+
+
+select__css : CssStyle
+select__css =
+    std__input ++ [ ( "background-color", "white" ) ]
 
 
 header : CssStyle

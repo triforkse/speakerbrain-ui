@@ -1,6 +1,6 @@
 module Components.Profile.Info exposing (profileInfoWidget)
 
-import Html exposing (Html, div)
+import Html exposing (Html, div, text, input)
 import Html.Attributes exposing (style)
 import App exposing (Msg)
 import Components.UI exposing (..)
@@ -10,7 +10,21 @@ import Components.API exposing (Profile)
 profileInfoWidget : Profile -> Html Msg
 profileInfoWidget profile =
     div [ style root__div ]
-        [ section "Credentials" [ tbl table__css headers (profileCredentials profile) ]
+        [ section "Credentials"
+            [ tbl table__css headers (profileCredentials profile)
+            , addCredential
+            ]
+        ]
+
+
+addCredential : Html Msg
+addCredential =
+    div [ style add__credential ]
+        [ div [ style add__credential__details ]
+            [ nmd "Datasource" dpb
+            , nmd "Credential" txt
+            ]
+        , btn "Add" add__credential__btn
         ]
 
 
@@ -35,6 +49,31 @@ profileCredentials profile =
             )
 
 
+add__credential : CssStyle
+add__credential =
+    [ ( "display", "flex" )
+    , ( "justify-content", "space-between" )
+    , ( "width", "30vw" )
+    , ( "margin-top", "20px" )
+    , ( "margin-left", "10vw" )
+    ]
+
+
+add__credential__details : CssStyle
+add__credential__details =
+    [ ( "display", "flex" ) ]
+
+
+add__credential__btn : CssStyle
+add__credential__btn =
+    [ ( "background-color", "#c0f6d2" )
+    , ( "border-color", "#c0f6d2" )
+    , ( "color", "white" )
+    , ( "margin-top", "10pt" )
+    , ( "width", "70px" )
+    ]
+
+
 table__css : CssStyle
 table__css =
     [ ( "width", "30vw" )
@@ -52,8 +91,8 @@ headers =
 
 delete__btn : CssStyle
 delete__btn =
-    [ ( "background-color", "red" )
-    , ( "border-color", "red" )
+    [ ( "background-color", "#ff7c81" )
+    , ( "border-color", "#ff7c81" )
     , ( "color", "white" )
     ]
 
