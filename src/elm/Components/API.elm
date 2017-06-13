@@ -80,10 +80,16 @@ type alias ProfileData =
 --
 
 
+type alias CredenitalSet =
+    { dataSource : String
+    , usernames : List String
+    }
+
+
 type alias Profile =
     { id : String
     , name : String
-    , credentials : Dict String (List String)
+    , credentials : List CredenitalSet
     , data : Dict String (List ProfileData)
     }
 
@@ -178,12 +184,19 @@ decodeDetailValue =
         ]
 
 
+decodeCredentials : Decoder (List CredenitalSet)
+decodeCredentials =
+    dict (list string)
+        |> Json.map Dict.toList
+        |> Json.map (List.map (\( k, v ) -> CredenitalSet k v))
+
+
 decodeProfile : Decoder Profile
 decodeProfile =
     map4 Profile
         (at [ "id" ] string)
         (at [ "name" ] string)
-        (at [ "credentials" ] <| dict (list string))
+        (at [ "credentials" ] decodeCredentials)
         (at [ "data" ] <| dict (list decodeProfileData))
 
 

@@ -163,7 +163,7 @@ showProfile : API.Profile -> ProfileTabView -> Html Msg
 showProfile profile currentTab =
     case currentTab of
         App.ProfileTab ->
-            profileInfoWidget
+            profileInfoWidget profile
 
         App.LibraryTab ->
             showProfileLibrary profile
