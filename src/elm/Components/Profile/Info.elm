@@ -19,30 +19,52 @@ section name children =
     div [ style section__div ] (sectionHeader name :: children)
 
 
-profileCredentials : Profile -> List (List String)
+profileCredentials : Profile -> List TableRow
 profileCredentials profile =
     profile.credentials
-        |> List.concatMap (\{ dataSource, usernames } -> List.map (\u -> [ dataSource, u ]) usernames)
+        |> List.concatMap
+            (\{ dataSource, usernames } ->
+                List.map
+                    (\u ->
+                        [ (Text dataSource)
+                        , (Text u)
+                        , (Htm (btn "Delete" delete__btn))
+                        ]
+                    )
+                    usernames
+            )
 
 
-table__css : List ( String, String )
+table__css : CssStyle
 table__css =
     [ ( "width", "30vw" )
+    , ( "margin-left", "10vw" )
     ]
 
 
-headers : List ( String, String )
+headers : List TableColumn
 headers =
-    [ ( "Source", "150px" ), ( "Value", "190px" ) ]
+    [ ( "Source", [ ( "width", "150px" ) ] )
+    , ( "Value", [ ( "width", "190px" ) ] )
+    , ( "", [ ( "width", "60px" ) ] )
+    ]
 
 
-section__div : List ( String, String )
+delete__btn : CssStyle
+delete__btn =
+    [ ( "background-color", "red" )
+    , ( "border-color", "red" )
+    , ( "color", "white" )
+    ]
+
+
+section__div : CssStyle
 section__div =
     [ ( "width", "50vw" )
     ]
 
 
-root__div : List ( String, String )
+root__div : CssStyle
 root__div =
     [ ( "display", "flex" )
     , ( "justify-content", "center" )

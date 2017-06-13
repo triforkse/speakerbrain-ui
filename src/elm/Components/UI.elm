@@ -1,8 +1,25 @@
-module Components.UI exposing (sectionHeader, tbl)
+module Components.UI exposing (CssStyle, TableColumn, TableRow, TableCell(Text, Htm), sectionHeader, tbl, btn)
 
 import App exposing (Msg)
 import Html exposing (..)
 import Html.Attributes exposing (style)
+
+
+type alias CssStyle =
+    List ( String, String )
+
+
+type alias TableColumn =
+    ( String, CssStyle )
+
+
+type TableCell
+    = Htm (Html Msg)
+    | Text String
+
+
+type alias TableRow =
+    List TableCell
 
 
 sectionHeader : String -> Html Msg
@@ -10,7 +27,12 @@ sectionHeader name =
     div [ style section__header ] [ span [] [ text name ] ]
 
 
-tbl : List ( String, String ) -> List ( String, String ) -> List (List String) -> Html Msg
+btn : String -> CssStyle -> Html Msg
+btn label styling =
+    button [ style (button__css ++ styling) ] [ text label ]
+
+
+tbl : CssStyle -> List TableColumn -> List TableRow -> Html Msg
 tbl styling headers rows =
     div [ style styling ]
         [ tableLine
@@ -21,27 +43,47 @@ tbl styling headers rows =
         ]
 
 
-tableRows : List ( String, String ) -> List (List String) -> Html Msg
+tableRows : List TableColumn -> List TableRow -> Html Msg
 tableRows headersDef rows =
     div [] (List.map (tableRow headersDef) rows)
 
 
-tableRow : List ( String, String ) -> List String -> Html Msg
+tableRow : List TableColumn -> TableRow -> Html Msg
 tableRow headersDef row =
     div [ style table__row ] (List.map2 tableRowColumn headersDef row)
 
 
-tableRowColumn : ( String, String ) -> String -> Html Msg
-tableRowColumn ( _, columnWidth ) value =
-    span [ style (table__row__column columnWidth) ] [ text value ]
+tableRowColumn : TableColumn -> TableCell -> Html Msg
+tableRowColumn ( _, columnStyling ) cell =
+    case cell of
+        Text value ->
+            span [ style (table__row__column ++ columnStyling) ] [ text value ]
+
+        Htm html ->
+            html
 
 
-columnHeader : ( String, String ) -> Html Msg
-columnHeader ( label, colWidth ) =
-    div [ style (header__column colWidth) ] [ text label ]
+columnHeader : TableColumn -> Html Msg
+columnHeader ( label, styling ) =
+    div [ style (header__column ++ styling) ] [ text label ]
 
 
-header : List ( String, String )
+tableLine : Html Msg
+tableLine =
+    div [ style table__line ] []
+
+
+button__css : CssStyle
+button__css =
+    [ ( "height", "20px" )
+    , ( "border", "solid thin grey" )
+    , ( "border-radius", "3px" )
+    , ( "background", "white" )
+    , ( "font-size", "8pt" )
+    ]
+
+
+header : CssStyle
 header =
     [ ( "display", "flex" )
     , ( "border-left", "solid thin #DCDCDC" )
@@ -52,12 +94,7 @@ header =
     ]
 
 
-tableLine : Html Msg
-tableLine =
-    div [ style table__line ] []
-
-
-section__header : List ( String, String )
+section__header : CssStyle
 section__header =
     [ ( "font-weight", "lighter" )
     , ( "width", "100%" )
@@ -67,16 +104,15 @@ section__header =
     ]
 
 
-header__column : String -> List ( String, String )
-header__column colWidth =
-    [ ( "width", colWidth )
-    , ( "font-size", "10pt" )
+header__column : CssStyle
+header__column =
+    [ ( "font-size", "10pt" )
     , ( "text-transform", "uppercase" )
     , ( "color", "#4F4F4F" )
     ]
 
 
-table__line : List ( String, String )
+table__line : CssStyle
 table__line =
     [ ( "padding-left", "10px" )
     , ( "padding-right", "10px" )
@@ -84,7 +120,7 @@ table__line =
     ]
 
 
-table__row : List ( String, String )
+table__row : CssStyle
 table__row =
     [ ( "display", "flex" )
     , ( "height", "30px" )
@@ -96,6 +132,6 @@ table__row =
     ]
 
 
-table__row__column : String -> List ( String, String )
-table__row__column colWidth =
-    [ ( "width", colWidth ), ( "color", "#585858" ) ]
+table__row__column : CssStyle
+table__row__column =
+    [ ( "color", "#585858" ) ]
