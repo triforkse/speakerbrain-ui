@@ -54,14 +54,19 @@ tbl styling headers rows =
         [ tableLine
         , div [ style header ] (List.map columnHeader headers)
         , tableLine
-        , tableRows headers rows
+        , tableRows (extractHeightCss styling) headers rows
         , tableLine
         ]
 
 
-tableRows : List TableColumn -> List TableRow -> Html Msg
-tableRows headersDef rows =
-    div [] (List.map (tableRow headersDef) rows)
+extractHeightCss : CssStyle -> CssStyle
+extractHeightCss css =
+    List.filter (\( prop, _ ) -> prop == "height") css
+
+
+tableRows : CssStyle -> List TableColumn -> List TableRow -> Html Msg
+tableRows styling headersDef rows =
+    div [ style (table__rows ++ styling) ] (List.map (tableRow headersDef) rows)
 
 
 tableRow : List TableColumn -> TableRow -> Html Msg
@@ -151,6 +156,11 @@ header__column =
     , ( "text-transform", "uppercase" )
     , ( "color", "#4F4F4F" )
     ]
+
+
+table__rows : CssStyle
+table__rows =
+    [ ( "overflow-y", "scroll" ) ]
 
 
 table__line : CssStyle

@@ -1,6 +1,7 @@
 module Main exposing (..)
 
 import App exposing (Msg, State, ProfileTabView)
+import Components.UI exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (style)
 import Html.Attributes as Attr
@@ -210,7 +211,14 @@ showQueryResult recommendations queryString selectedUserId =
 
 recommendationTable : List API.Recommendation -> Html Msg
 recommendationTable recommendations =
-    div [ style recommendation__table ] (recommendationTableHeader :: (List.map recommendationTableRow recommendations))
+    tbl recommendation__table recommendationColumns (List.map recommendationTableRow recommendations)
+
+
+recommendationColumns : List TableColumn
+recommendationColumns =
+    [ ( "Rating", [ ( "width", "70px" ) ] )
+    , ( "Speaker", [ ( "width", "90px" ) ] )
+    ]
 
 
 userRecommendationDetails : Maybe API.Recommendation -> Html Msg
@@ -223,33 +231,11 @@ userRecommendationDetails selectedUserId =
             div [ style recommendation__table ] (List.map recommendationSource recommendation.sources)
 
 
-recommendationTableHeader : Html Msg
-recommendationTableHeader =
-    div [ style (recommendation__table__row ++ recommendation__table__line) ]
-        [ span [ style (recommendation__table__header ++ recommendation__rating__column) ] [ text "Rating" ]
-        , span [ style recommendation__table__header ] [ text "Speaker" ]
-        ]
-
-
-recommendationTableRow : API.Recommendation -> Html Msg
+recommendationTableRow : API.Recommendation -> TableRow
 recommendationTableRow recommendation =
-    div [ style recommendation__table__row ]
-        [ span [ style recommendation__rating__column ] [ text (toString recommendation.total) ]
-        , span [ style link__button ] [ a [ E.onClick (App.ShowDetails recommendation) ] [ text recommendation.name ] ]
-        ]
-
-
-recommendationRowOptions : API.Recommendation -> Html Msg
-recommendationRowOptions recommendation =
-    div []
-        [ button [ style recommendation__row__details__btn, E.onClick (App.ShowDetails recommendation) ] [ text "Details" ]
-        , button [ style recommendation__row__details__btn ] [ text "Search" ]
-        ]
-
-
-recommendationDetails : List API.Source -> Html Msg
-recommendationDetails sources =
-    div [ style recommendation__details ] (List.map recommendationSource sources)
+    [ (Text (toString recommendation.total))
+    , (Htm (span [ style link__button ] [ a [ E.onClick (App.ShowDetails recommendation) ] [ text recommendation.name ] ]))
+    ]
 
 
 recommendationSource : API.Source -> Html Msg
@@ -274,14 +260,6 @@ noResultsFound queryString =
         [ span [ style not__found__text ] [ text ("NO results found for \"" ++ queryString ++ "\"!") ]
         , button [ style crawl__button ] [ text ("Crawl for speakers named \"" ++ queryString ++ "\"") ]
         , button [ style crawl__button ] [ text ("Crawl for technologies named \"" ++ queryString ++ "\"") ]
-        ]
-
-
-viewProfile : API.Profile -> Html Msg
-viewProfile profile =
-    div []
-        [ div [] [ text <| profile.name ]
-        , div [] []
         ]
 
 
@@ -406,11 +384,10 @@ generic__table =
 
 recommendation__table : List ( String, String )
 recommendation__table =
-    generic__table
-        ++ [ ( "width", "50vw" )
-           , ( "height", "80vh" )
-           , ( "overflow-y", "scroll" )
-           ]
+    [ ( "margin", "30px" )
+    , ( "width", "50vw" )
+    , ( "height", "75vh" )
+    ]
 
 
 recommendation__table__header : List ( String, String )
