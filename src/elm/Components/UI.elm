@@ -160,7 +160,7 @@ header__column =
 
 table__rows : CssStyle
 table__rows =
-    [ ( "overflow-y", "scroll" ) ]
+    [ ( "overflow-y", "scroll" ), ( "border-left", "solid thin #DCDCDC" ) ]
 
 
 table__line : CssStyle
@@ -178,8 +178,6 @@ table__row =
     , ( "max-height", "30px" )
     , ( "width", "100%" )
     , ( "padding-left", "10px" )
-    , ( "border-left", "solid thin #DCDCDC" )
-    , ( "border-right", "solid thin #DCDCDC" )
     ]
 
 
