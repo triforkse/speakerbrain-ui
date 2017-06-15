@@ -21,7 +21,6 @@ type Msg
 
 type State
     = Init
-    | InitWithInfo API.SpeakerBrainInfo
     | Loading
     | Error String
     | LoadedRecommendations (List API.Recommendation) (Maybe API.Recommendation)

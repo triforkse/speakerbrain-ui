@@ -32,12 +32,12 @@ main =
 
 
 type alias Model =
-    { state : State, queryString : String }
+    { state : State, queryString : String, sbInfo : Maybe API.SpeakerBrainInfo }
 
 
 init : ( Model, Cmd Msg )
 init =
-    { state = App.Init, queryString = "" } ! [ API.fetchInfo App.OnInfoResponse ]
+    { state = App.Init, queryString = "", sbInfo = Nothing } ! [ API.fetchInfo App.OnInfoResponse ]
 
 
 
@@ -56,7 +56,10 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         App.Search queryString ->
-            { model | state = App.Loading } ! [ API.search App.OnSearchResponse (queryString) ]
+            if String.isEmpty queryString then
+                { model | state = App.Init } ! []
+            else
+                { model | state = App.Loading } ! [ API.search App.OnSearchResponse (queryString) ]
 
         App.SetQuery queryString ->
             { model | queryString = queryString } ! []
@@ -86,7 +89,7 @@ update msg model =
         App.OnInfoResponse result ->
             case result of
                 Ok info ->
-                    { model | state = (App.InitWithInfo info) } ! []
+                    { model | sbInfo = Just info } ! []
 
                 _ ->
                     model ! []
@@ -110,13 +113,15 @@ update msg model =
 
 
 view : Model -> Html Msg
-view { state, queryString } =
+view { state, queryString, sbInfo } =
     case state of
         App.Init ->
-            viewSearch queryString
+            case sbInfo of
+                Just info ->
+                    div [] [ viewSearch queryString, speakerBrainInfo info ]
 
-        App.InitWithInfo info ->
-            div [] [ viewSearch queryString, speakerBrainInfo info ]
+                Nothing ->
+                    viewSearch queryString
 
         App.Loading ->
             div [] [ viewSearch queryString, loadingView queryString ]
