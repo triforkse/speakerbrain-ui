@@ -10,7 +10,8 @@ type ProfileTabView
 
 
 type Msg
-    = OnResponse API.SearchResponse
+    = OnSearchResponse API.SearchResponse
+    | OnInfoResponse API.SpeakerBrainInfoResponse
     | Search String
     | ShowDetails API.Recommendation
     | ChangeProfileTab API.Profile ProfileTabView
@@ -20,6 +21,7 @@ type Msg
 
 type State
     = Init
+    | InitWithInfo API.SpeakerBrainInfo
     | Loading
     | Error String
     | LoadedRecommendations (List API.Recommendation) (Maybe API.Recommendation)

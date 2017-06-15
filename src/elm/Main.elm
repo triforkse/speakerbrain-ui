@@ -2,6 +2,7 @@ module Main exposing (..)
 
 import App exposing (Msg, State, ProfileTabView)
 import Components.UI exposing (..)
+import Components.Home.Info exposing (speakerBrainInfo)
 import Html exposing (..)
 import Html.Attributes exposing (style)
 import Html.Attributes as Attr
@@ -36,7 +37,7 @@ type alias Model =
 
 init : ( Model, Cmd Msg )
 init =
-    { state = App.Init, queryString = "" } ! []
+    { state = App.Init, queryString = "" } ! [ API.fetchInfo App.OnInfoResponse ]
 
 
 
@@ -55,7 +56,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         App.Search queryString ->
-            { model | state = App.Loading } ! [ API.search App.OnResponse (queryString) ]
+            { model | state = App.Loading } ! [ API.search App.OnSearchResponse (queryString) ]
 
         App.SetQuery queryString ->
             { model | queryString = queryString } ! []
@@ -66,7 +67,7 @@ update msg model =
             else
                 model ! []
 
-        App.OnResponse (Err err) ->
+        App.OnSearchResponse (Err err) ->
             case err of
                 Http.BadPayload errorString e ->
                     { model | state = App.Error errorString } ! []
@@ -74,13 +75,21 @@ update msg model =
                 _ ->
                     { model | state = App.Error (toString err) } ! []
 
-        App.OnResponse (Ok result) ->
+        App.OnSearchResponse (Ok result) ->
             case result of
                 API.SpeakerProfile profile ->
                     { model | state = (App.LoadedProfile profile App.ProfileTab) } ! []
 
                 API.Recommendations people ->
                     { model | state = (App.LoadedRecommendations (people |> List.sortBy .total |> List.reverse) Nothing) } ! []
+
+        App.OnInfoResponse result ->
+            case result of
+                Ok info ->
+                    { model | state = (App.InitWithInfo info) } ! []
+
+                _ ->
+                    model ! []
 
         App.ChangeProfileTab profile newTabView ->
             { model | state = (App.LoadedProfile profile newTabView) } ! []
@@ -105,6 +114,9 @@ view { state, queryString } =
     case state of
         App.Init ->
             viewSearch queryString
+
+        App.InitWithInfo info ->
+            div [] [ viewSearch queryString, speakerBrainInfo info ]
 
         App.Loading ->
             div [] [ viewSearch queryString, loadingView queryString ]

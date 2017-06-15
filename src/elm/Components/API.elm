@@ -1,13 +1,53 @@
-module Components.API exposing (..)
+module Components.API
+    exposing
+        ( SearchResponse
+        , SpeakerBrainInfoResponse
+        , Recommendation
+        , SearchResult(..)
+        , Profile
+        , SpeakerBrainInfo
+        , ProfileData
+        , Source
+        , Link
+        , search
+        , fetchInfo
+        )
 
 import Json.Decode as Json exposing (..)
 import Dict exposing (Dict)
 import Http
 
 
+andMap : Decoder a -> Decoder (a -> b) -> Decoder b
+andMap =
+    map2 (|>)
+
+
+{-| Infix version of `andMap` that makes for a nice DSL when decoding objects.
+See [the `(|:)` docs](https://github.com/elm-community/json-extra/blob/2.0.0/docs/infixAndMap.md)
+for an explanation of how `(|:)` works and how to use it.
+-}
+(|:) : Decoder (a -> b) -> Decoder a -> Decoder b
+(|:) =
+    flip andMap
+
+
 baseURL : String
 baseURL =
     "http://localhost:5000/"
+
+
+type alias SpeakerBrainInfo =
+    { datasources : List String
+    , speakers : String
+    , tweets : String
+    , twitter_accounts : String
+    , youtube_videos : String
+    , github_repositories : String
+    , github_users : String
+    , lanyrd_profiles : String
+    , lanyrd_events : String
+    }
 
 
 type alias Source =
@@ -117,6 +157,10 @@ type alias SearchResponse =
     Result Http.Error SearchResult
 
 
+type alias SpeakerBrainInfoResponse =
+    Result Http.Error SpeakerBrainInfo
+
+
 decodeLink : Decoder Link
 decodeLink =
     map2 Link
@@ -166,13 +210,6 @@ decodeProfileData =
                         error ->
                             Json.fail <| "id or name is illegal: " ++ (toString error)
             )
-
-
-
--- map3 ProfileData
---     (at [ "id" ] string)
---     (at [ "name" ] string)
---     (at [ "data" ] <| dict decodeDetailValue)
 
 
 decodeDetailValue : Decoder DetailValue
@@ -241,13 +278,20 @@ search toMsg query =
     Http.get (baseURL ++ "search?query=" ++ query) decodeSearch |> Http.send toMsg
 
 
-recommend : (RecommendationResponse -> msg) -> String -> Cmd msg
-recommend toMsg query =
-    Http.get (baseURL ++ "recommend?query=" ++ query) (list decodePerson)
-        |> Http.send toMsg
+decodeSpeakerbrainInfo : Decoder SpeakerBrainInfo
+decodeSpeakerbrainInfo =
+    succeed SpeakerBrainInfo
+        |: (at [ "datasources" ] (list string))
+        |: (at [ "speakers" ] string)
+        |: (at [ "tweets" ] string)
+        |: (at [ "twitter_accounts" ] string)
+        |: (at [ "youtube_videos" ] string)
+        |: (at [ "github_repositories" ] string)
+        |: (at [ "github_users" ] string)
+        |: (at [ "lanyrd_profiles" ] string)
+        |: (at [ "lanyrd_events" ] string)
 
 
-profile : (ProfileResponse -> msg) -> String -> Cmd msg
-profile toMsg userId =
-    Http.get (baseURL ++ "profile/" ++ toString userId) decodeProfile
-        |> Http.send toMsg
+fetchInfo : (SpeakerBrainInfoResponse -> msg) -> Cmd msg
+fetchInfo toMsg =
+    Http.get (baseURL ++ "info") decodeSpeakerbrainInfo |> Http.send toMsg
