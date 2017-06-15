@@ -1,9 +1,16 @@
 module Components.Home.Info exposing (speakerBrainInfo)
 
-import Html exposing (Html, div, text, span)
-import Html.Attributes exposing (style)
 import App exposing (Msg)
 import Components.API exposing (SpeakerBrainInfo)
+import FormatNumber exposing (format)
+import FormatNumber.Locales exposing (usLocale)
+import Html exposing (Html, div, span, text)
+import Html.Attributes exposing (style)
+
+
+locale : FormatNumber.Locales.Locale
+locale =
+    { usLocale | decimals = 0 }
 
 
 speakerBrainInfo : SpeakerBrainInfo -> Html Msg
@@ -21,7 +28,7 @@ speakerStat : SpeakerBrainInfo -> Html Msg
 speakerStat info =
     div []
         [ numStat info.speakers
-        , text " speakers found"
+        , text " speakers collected"
         ]
 
 
@@ -65,7 +72,12 @@ lanyrdStat info =
 
 numStat : String -> Html Msg
 numStat value =
-    span [ style num__stat ] [ text value ]
+    case String.toFloat value of
+        Ok num ->
+            span [ style num__stat ] [ text (format locale num) ]
+
+        _ ->
+            div [] []
 
 
 info__root : List ( String, String )
