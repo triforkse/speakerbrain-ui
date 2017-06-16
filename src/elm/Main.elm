@@ -165,17 +165,11 @@ tabBar =
 
 
 profileTabBar : API.Profile -> ProfileTabView -> Html Msg
-profileTabBar profile currentTab =
-    div [ style tab__bar ]
-        [ profileTabItem profile currentTab App.ProfileTab "Profile"
-        , profileTabItem profile currentTab App.LibraryTab "Library"
+profileTabBar profile current =
+    tab
+        [ { header = "Profile", message = (App.ChangeProfileTab profile App.ProfileTab), isActive = current == App.ProfileTab }
+        , { header = "Profile", message = (App.ChangeProfileTab profile App.LibraryTab), isActive = current == App.LibraryTab }
         ]
-
-
-profileTabItem : API.Profile -> ProfileTabView -> ProfileTabView -> String -> Html Msg
-profileTabItem profile currentTab thisTab name =
-    div [ style (tab__item (currentTab == thisTab)) ]
-        [ span [ E.onClick (App.ChangeProfileTab profile thisTab) ] [ text name ] ]
 
 
 showProfile : API.Profile -> ProfileTabView -> Html Msg
@@ -346,41 +340,11 @@ recommendation__frame =
     ]
 
 
-generic__table : List ( String, String )
-generic__table =
-    [ ( "display", "flex" )
-    , ( "flex-direction", "column" )
-    , ( "margin", "30px" )
-    , ( "padding", "10px" )
-    , ( "border", "solid thin #DCDCDC" )
-    ]
-
-
 recommendation__table : List ( String, String )
 recommendation__table =
     [ ( "margin", "30px" )
     , ( "width", "50vw" )
     , ( "height", "75vh" )
-    ]
-
-
-recommendation__table__header : List ( String, String )
-recommendation__table__header =
-    [ ( "font-size", "10pt" )
-    , ( "text-transform", "uppercase" )
-    , ( "color", "#4F4F4F" )
-    ]
-
-
-recommendation__table__line : List ( String, String )
-recommendation__table__line =
-    [ ( "margin-left", "-10px" )
-    , ( "padding-left", "10px" )
-    , ( "margin-right", "-10px" )
-    , ( "padding-right", "10px" )
-    , ( "padding-bottom", "3px" )
-    , ( "margin-bottom", "4px" )
-    , ( "border-bottom", "solid thin #DCDCDC" )
     ]
 
 

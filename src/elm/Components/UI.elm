@@ -7,6 +7,8 @@ module Components.UI
         , Category
         , CategoryHeader
         , CategoryEntry
+        , Tab
+        , tab
         , sectionHeader
         , tbl
         , ctbl
@@ -20,6 +22,7 @@ import App exposing (Msg)
 import Html exposing (..)
 import Html.Attributes exposing (style)
 import Html.Attributes as Attr
+import Html.Events as E
 
 
 type alias CssStyle =
@@ -51,6 +54,50 @@ type alias Category =
     { header : CategoryHeader
     , entries : CategoryEntry
     }
+
+
+type alias Tab =
+    { header : String
+    , message : Msg
+    , isActive : Bool
+    }
+
+
+tab : List Tab -> Html Msg
+tab tabs =
+    div [ style tab__bar ] (List.map tabItem tabs)
+
+
+tabItem : Tab -> Html Msg
+tabItem tab =
+    div [ style (tab__item tab.isActive) ]
+        [ span [ E.onClick tab.message ] [ text tab.header ]
+        ]
+
+
+tab__bar : List ( String, String )
+tab__bar =
+    [ ( "height", "5vh" )
+    , ( "padding-left", "30px" )
+    , ( "padding-right", "30px" )
+    , ( "display", "flex" )
+    , ( "border-bottom", "solid thin #DCDCDC" )
+    ]
+
+
+tab__item : Bool -> CssStyle
+tab__item active =
+    [ ( "height", "5vh" )
+    , ( "display", "flex" )
+    , ( "justify-content", "center" )
+    , ( "align-items", "center" )
+    , ( "margin-right", "20px" )
+    , ( "cursor", "pointer" )
+    ]
+        ++ if active then
+            [ ( "font-weight", "bold" ) ]
+           else
+            [ ( "opacity", "0.8" ) ]
 
 
 sectionHeader : String -> Html Msg
