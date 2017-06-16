@@ -2,10 +2,10 @@ module Main exposing (..)
 
 import App exposing (Msg, State, ProfileTabView)
 import Components.UI exposing (..)
+import Components.UiFrame exposing (ui)
 import Components.Home.Info exposing (speakerBrainInfo)
 import Components.Recommendation.Details exposing (recommendationWidget)
-import Components.Profile.Info exposing (profileInfoWidget)
-import Components.Profile.Library exposing (profileLibrary)
+import Components.Profile.Parent exposing (profile)
 import Html exposing (..)
 import Html.Attributes exposing (style)
 import Html.Attributes as Attr
@@ -119,26 +119,24 @@ view { state, queryString, sbInfo } =
         App.Init ->
             case sbInfo of
                 Just info ->
-                    div [] [ viewSearch queryString, speakerBrainInfo info ]
+                    ui queryString (speakerBrainInfo info)
 
                 Nothing ->
-                    viewSearch queryString
+                    ui queryString (div [] [])
 
         App.Loading ->
-            div [] [ viewSearch queryString, loadingView queryString ]
+            ui queryString (loadingView queryString)
 
         App.Error errText ->
             text <| "Error: " ++ errText
 
-        App.LoadedProfile profile currentTab ->
-            div [ style root_div ] [ viewSearch queryString, profileTabBar profile currentTab, (showProfile profile currentTab) ]
+        App.LoadedProfile apiProfile currentTab ->
+            ui queryString (profile apiProfile currentTab)
 
         App.LoadedRecommendations people selectedUserId ->
-            div [ style root_div ]
-                [ viewSearch queryString
-                , tabBar
-                , showQueryResult people queryString selectedUserId
-                ]
+            ui
+                queryString
+                (div [] [ tabBar, showQueryResult people queryString selectedUserId ])
 
 
 loadingView : String -> Html Msg
@@ -149,37 +147,11 @@ loadingView queryString =
         ]
 
 
-viewSearch : String -> Html Msg
-viewSearch queryString =
-    div [ style search__section ]
-        [ input [ Attr.class "search__field", Attr.value queryString, E.onInput App.SetQuery, Attr.placeholder "Search for technology or speaker" ] []
-        , button [ Attr.class "search__button", E.onClick <| App.Search queryString ] [ text "Search" ]
-        ]
-
-
 tabBar : Html Msg
 tabBar =
     div [ style tab__bar ]
         [ div [ style (tab__item True) ] [ text "Speakers" ]
         ]
-
-
-profileTabBar : API.Profile -> ProfileTabView -> Html Msg
-profileTabBar profile current =
-    tab
-        [ { header = "Profile", message = (App.ChangeProfileTab profile App.ProfileTab), isActive = current == App.ProfileTab }
-        , { header = "Profile", message = (App.ChangeProfileTab profile App.LibraryTab), isActive = current == App.LibraryTab }
-        ]
-
-
-showProfile : API.Profile -> ProfileTabView -> Html Msg
-showProfile profile currentTab =
-    case currentTab of
-        App.ProfileTab ->
-            profileInfoWidget profile
-
-        App.LibraryTab ->
-            profileLibrary profile
 
 
 showQueryResult : List API.Recommendation -> String -> Maybe API.Recommendation -> Html Msg
@@ -252,18 +224,6 @@ loading__label =
     ]
 
 
-search__section : List ( String, String )
-search__section =
-    [ ( "background-color", "#FAFAFA" )
-    , ( "font-size", "20px" )
-    , ( "display", "flex" )
-    , ( "justify-content", "center" )
-    , ( "align-items", "center" )
-    , ( "height", "10vh" )
-    , ( "border-bottom", "solid thin #DCDCDC" )
-    ]
-
-
 tab__bar : List ( String, String )
 tab__bar =
     [ ( "height", "5vh" )
@@ -287,13 +247,6 @@ tab__item active =
             [ ( "font-weight", "bold" ) ]
            else
             [ ( "opacity", "0.8" ) ]
-
-
-root_div : List ( String, String )
-root_div =
-    [ ( "display", "flex" )
-    , ( "flex-direction", "column" )
-    ]
 
 
 link__button : List ( String, String )
