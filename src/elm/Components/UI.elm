@@ -237,7 +237,7 @@ header__column =
 
 table__rows : CssStyle
 table__rows =
-    [ ( "overflow-y", "scroll" ), ( "border-left", "solid thin #DCDCDC" ) ]
+    [ ( "overflow-y", "auto" ), ( "border-left", "solid thin #DCDCDC" ) ]
 
 
 table__line : CssStyle

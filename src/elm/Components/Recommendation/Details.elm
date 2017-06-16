@@ -10,9 +10,11 @@ import Components.UI
         , ctbl
         , CssStyle
         )
+import Round exposing (..)
 import Components.Util exposing (prettyDataSourceName)
-import Html exposing (Html, div, a, text)
+import Html exposing (Html, div, a, text, span)
 import Html.Attributes as Attr
+import Html.Attributes exposing (style)
 import Components.API exposing (Recommendation, Source, Link)
 
 
@@ -26,9 +28,21 @@ recommendationWidget recommendation =
 
 sourceToCategoryUi : Source -> Category
 sourceToCategoryUi source =
-    { header = [ Text (prettyDataSourceName source.name) ]
+    { header = header source
     , entries = (List.map entry source.references)
     }
+
+
+header : Source -> CategoryHeader
+header source =
+    [ Text ((prettyDataSourceName source.name))
+    , Htm (span [ style header__style ] [ text (Round.round 2 source.rating) ])
+    ]
+
+
+header__style : List ( String, String )
+header__style =
+    [ ( "float", "right" ), ( "margin-right", "5px" ) ]
 
 
 entry : Link -> Element
@@ -41,5 +55,6 @@ frame =
     [ ( "margin", "30px" )
     , ( "margin-left", "-10px" )
     , ( "width", "50vw" )
-    , ( "height", "75vh" )
+    , ( "height", "79vh" )
+    , ( "overflow-y", "auto" )
     ]
