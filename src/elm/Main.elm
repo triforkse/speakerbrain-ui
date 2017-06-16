@@ -4,14 +4,14 @@ import App exposing (Msg, State, ProfileTabView)
 import Components.UI exposing (..)
 import Components.Home.Info exposing (speakerBrainInfo)
 import Components.Recommendation.Details exposing (recommendationWidget)
+import Components.Profile.Info exposing (profileInfoWidget)
+import Components.Profile.Library exposing (profileLibrary)
 import Html exposing (..)
 import Html.Attributes exposing (style)
 import Html.Attributes as Attr
 import Html.Events as E
 import Components.API as API
-import Components.Profile.Info exposing (profileInfoWidget)
 import Http
-import Dict
 import Keyboard exposing (KeyCode)
 
 
@@ -185,30 +185,7 @@ showProfile profile currentTab =
             profileInfoWidget profile
 
         App.LibraryTab ->
-            showProfileLibrary profile
-
-
-showProfileLibrary : API.Profile -> Html Msg
-showProfileLibrary profile =
-    div [ style generic__table ] <|
-        (profile.data
-            |> Dict.toList
-            |> List.filter (Tuple.second >> List.isEmpty >> not)
-            |> List.map profileDatasource
-        )
-
-
-profileDatasource : ( String, List API.ProfileData ) -> Html Msg
-profileDatasource ( name, data ) =
-    div [ style recommendation__table__line ]
-        [ div [ style (recommendation__table__header ++ recommendation__table__line) ] [ text name ]
-        , div [] (List.map profileDatasourceElement data)
-        ]
-
-
-profileDatasourceElement : API.ProfileData -> Html Msg
-profileDatasourceElement data =
-    div [] [ a [ Attr.href data.href ] [ text data.name ] ]
+            profileLibrary profile
 
 
 showQueryResult : List API.Recommendation -> String -> Maybe API.Recommendation -> Html Msg
