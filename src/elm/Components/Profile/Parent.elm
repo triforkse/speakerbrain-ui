@@ -23,7 +23,7 @@ tabBar : Profile -> ProfileTabView -> Html Msg
 tabBar profile current =
     tab
         [ { header = "Profile", message = (App.ChangeProfileTab profile App.ProfileTab), isActive = current == App.ProfileTab }
-        , { header = "Profile", message = (App.ChangeProfileTab profile App.LibraryTab), isActive = current == App.LibraryTab }
+        , { header = "Library", message = (App.ChangeProfileTab profile App.LibraryTab), isActive = current == App.LibraryTab }
         ]
 
 

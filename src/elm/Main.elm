@@ -1,13 +1,11 @@
 module Main exposing (..)
 
 import App exposing (Msg, State, ProfileTabView)
-import Components.UiFrame exposing (ui)
+import Components.CoreUi exposing (ui, loadingView)
 import Components.Home.Info exposing (speakerBrainInfo)
 import Components.Profile.Parent exposing (profile)
 import Components.Recommendation.Parent exposing (recommendation)
 import Html exposing (..)
-import Html.Attributes exposing (style)
-import Html.Attributes as Attr
 import Components.API as API
 import Http
 import Keyboard exposing (KeyCode)
@@ -137,36 +135,8 @@ view { state, queryString, sbInfo } =
                 (recommendation queryString people selected)
 
 
-loadingView : String -> Html Msg
-loadingView queryString =
-    div [ style loading__view ]
-        [ img [ Attr.src "static/img/loading.svg" ] []
-        , span [ style loading__label ] [ text ("Looking for '" ++ queryString ++ "'...") ]
-        ]
-
-
 
 -- CSS STYLES
-
-
-loading__view : List ( String, String )
-loading__view =
-    [ ( "display", "flex" )
-    , ( "flex-direction", "column" )
-    , ( "justify-content", "center" )
-    , ( "align-items", "center" )
-    , ( "height", "90vh" )
-    ]
-
-
-loading__label : List ( String, String )
-loading__label =
-    [ ( "font-size", "32pt" )
-    , ( "font-weight", "lighter" )
-    ]
-
-
-
 -- Subscriptions
 
 
