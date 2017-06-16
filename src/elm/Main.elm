@@ -188,11 +188,6 @@ showProfile profile currentTab =
             showProfileLibrary profile
 
 
-showProfileInfo : Html Msg
-showProfileInfo =
-    div [] []
-
-
 showProfileLibrary : API.Profile -> Html Msg
 showProfileLibrary profile =
     div [ style generic__table ] <|
@@ -254,22 +249,6 @@ recommendationTableRow recommendation =
     [ (Text (toString recommendation.total))
     , (Htm (span [ style link__button ] [ a [ E.onClick (App.ShowDetails recommendation) ] [ text recommendation.name ] ]))
     ]
-
-
-recommendationSource : API.Source -> Html Msg
-recommendationSource source =
-    if List.isEmpty source.references then
-        div [] []
-    else
-        div []
-            [ div [ style (recommendation__table__header ++ recommendation__table__line) ] [ text source.name ]
-            , ul [] (List.map recommendationSourceLink source.references)
-            ]
-
-
-recommendationSourceLink : API.Link -> Html Msg
-recommendationSourceLink link =
-    div [] [ a [ Attr.href link.href ] [ text link.text ] ]
 
 
 noResultsFound : String -> Html Msg
@@ -426,53 +405,6 @@ recommendation__table__line =
     , ( "margin-bottom", "4px" )
     , ( "border-bottom", "solid thin #DCDCDC" )
     ]
-
-
-recommendation__table__row : List ( String, String )
-recommendation__table__row =
-    [ ( "display", "flex" )
-    , ( "min-height", "30px" )
-    , ( "height", "30px" )
-    ]
-
-
-recommendation__rating__column : List ( String, String )
-recommendation__rating__column =
-    [ ( "width", "90px" ) ]
-
-
-recommendation__options__column : List ( String, String )
-recommendation__options__column =
-    [ ( "right", "0px" ), ( "float", "right" ) ]
-
-
-recommendation__details : List ( String, String )
-recommendation__details =
-    [ ( "margin-bottom", "7px" )
-    ]
-
-
-recommendation__source__name : List ( String, String )
-recommendation__source__name =
-    [ ( "text-transform", "capitalize" )
-    ]
-
-
-recommendation__row__details__btn : List ( String, String )
-recommendation__row__details__btn =
-    [ ( "background-color", "#FAFAFA" )
-    , ( "border", "solid 1px #DCDCDC" )
-    , ( "margin-right", "7px" )
-    ]
-
-
-styles : { img : List ( String, String ) }
-styles =
-    { img =
-        [ ( "width", "33%" )
-        , ( "border", "4px solid #337AB7" )
-        ]
-    }
 
 
 
