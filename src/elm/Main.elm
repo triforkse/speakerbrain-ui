@@ -3,6 +3,7 @@ module Main exposing (..)
 import App exposing (Msg, State, ProfileTabView)
 import Components.UI exposing (..)
 import Components.Home.Info exposing (speakerBrainInfo)
+import Components.Recommendation.Details exposing (recommendationWidget)
 import Html exposing (..)
 import Html.Attributes exposing (style)
 import Html.Attributes as Attr
@@ -245,7 +246,7 @@ userRecommendationDetails selectedUserId =
             div [] []
 
         Just recommendation ->
-            div [ style recommendation__table ] (List.map recommendationSource recommendation.sources)
+            recommendationWidget recommendation
 
 
 recommendationTableRow : API.Recommendation -> TableRow

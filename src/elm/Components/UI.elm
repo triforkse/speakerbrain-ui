@@ -1,4 +1,20 @@
-module Components.UI exposing (CssStyle, TableColumn, TableRow, TableCell(Text, Htm), sectionHeader, tbl, btn, dpb, nmd, txt)
+module Components.UI
+    exposing
+        ( CssStyle
+        , TableColumn
+        , TableRow
+        , Element(Text, Htm)
+        , Category
+        , CategoryHeader
+        , CategoryEntry
+        , sectionHeader
+        , tbl
+        , ctbl
+        , btn
+        , dpb
+        , nmd
+        , txt
+        )
 
 import App exposing (Msg)
 import Html exposing (..)
@@ -14,18 +30,37 @@ type alias TableColumn =
     ( String, CssStyle )
 
 
-type TableCell
+type Element
     = Htm (Html Msg)
     | Text String
 
 
 type alias TableRow =
-    List TableCell
+    List Element
+
+
+type alias CategoryHeader =
+    List Element
+
+
+type alias CategoryEntry =
+    List Element
+
+
+type alias Category =
+    { header : CategoryHeader
+    , entries : CategoryEntry
+    }
 
 
 sectionHeader : String -> Html Msg
 sectionHeader name =
     div [ style section__header ] [ span [] [ text name ] ]
+
+
+ctbl : CssStyle -> List Category -> Html Msg
+ctbl styling categories =
+    div [ style styling ] (tableLine :: (List.map drawCategory categories))
 
 
 txt : Html Msg
@@ -59,6 +94,39 @@ tbl styling headers rows =
         ]
 
 
+drawCategory : Category -> Html Msg
+drawCategory category =
+    div []
+        [ categoryHeader category.header
+        , tableLine
+        , categoryEntries category.entries
+        , tableLine
+        ]
+
+
+categoryHeader : CategoryHeader -> Html Msg
+categoryHeader cheader =
+    div [ style category__header ] (List.map (drawElement False) cheader)
+
+
+drawElement : Bool -> Element -> Html Msg
+drawElement break element =
+    case element of
+        Text value ->
+            if break then
+                div [] [ text value ]
+            else
+                span [] [ text value ]
+
+        Htm html ->
+            html
+
+
+categoryEntries : CategoryEntry -> Html Msg
+categoryEntries entries =
+    div [ style category__header ] (List.map (drawElement True) entries)
+
+
 extractHeightCss : CssStyle -> CssStyle
 extractHeightCss css =
     List.filter (\( prop, _ ) -> prop == "height") css
@@ -74,7 +142,7 @@ tableRow headersDef row =
     div [ style table__row ] (List.map2 tableRowColumn headersDef row)
 
 
-tableRowColumn : TableColumn -> TableCell -> Html Msg
+tableRowColumn : TableColumn -> Element -> Html Msg
 tableRowColumn ( _, columnStyling ) cell =
     case cell of
         Text value ->
@@ -87,6 +155,15 @@ tableRowColumn ( _, columnStyling ) cell =
 columnHeader : TableColumn -> Html Msg
 columnHeader ( label, styling ) =
     div [ style (header__column ++ styling) ] [ text label ]
+
+
+category__header : CssStyle
+category__header =
+    [ ( "border-left", "solid thin #DCDCDC" )
+    , ( "border-right", "solid thin #DCDCDC" )
+    , ( "padding", "4px" )
+    , ( "color", "#4F4F4F" )
+    ]
 
 
 std__input : CssStyle
